@@ -5,11 +5,12 @@ const AddToCartButton = ({ product, className = "" }) => {
   const { addToCart } = useCart();
   const [added, setAdded] = useState(false);
 
-  const handleClick = () => {
-    addToCart(product);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1200);
-  };
+ const handleClick = () => {
+  const ok = addToCart(product);
+  if (!ok) return; // sign-in window is opening instead
+  setAdded(true);
+  setTimeout(() => setAdded(false), 1200);
+};
 
   return (
     <button

@@ -8,6 +8,7 @@ import Cart from "./components/Cart";
 import CartDrawer from "./components/CartDrawer";
 import AdminPanel from "./components/admin/AdminPanel";
 import ProductDetails from "./components/ProductDetails";
+import AuthModal from "./components/AuthModal";
 
 const App = () => {
   return (
@@ -20,6 +21,7 @@ const App = () => {
       <Products />
       <CartDrawer />
       <AdminPanel />
+      <AuthModal />
       <Reviews />
       <Footer />
     </div>

@@ -6,10 +6,10 @@ import { useCart } from "../context/CartContext";
 import { formatPrice } from "../utils/formatPrice";
 import { WHATSAPP_NUMBER } from "../config";
 import Stars from "./Stars";
+import { useAuth } from "../context/AuthContext";
 
 const tab = (on) =>
-  `rounded-full px-4 py-1.5 text-sm font-semibold border transition ${
-    on ? "bg-neutral-900 text-white border-neutral-900" : "border-neutral-300 hover:bg-neutral-100"
+  `rounded-full px-4 py-1.5 text-sm font-semibold border transition ${on ? "bg-neutral-900 text-white border-neutral-900" : "border-neutral-300 hover:bg-neutral-100"
   }`;
 
 const inputClass = "border border-neutral-300 rounded-lg px-3 py-3 w-full";
@@ -18,6 +18,7 @@ const ProductDetails = () => {
   const { id } = useParams();
   const { products, loading, refresh } = useStoreData();
   const { addToCart, openCart } = useCart();
+  const { user, displayName, openAuth } = useAuth();
 
   const product = products.find((p) => String(p.id) === id);
 
@@ -25,12 +26,11 @@ const ProductDetails = () => {
   const [view, setView] = useState("photo"); // "photo" | "3d"
   const [reviews, setReviews] = useState([]);
 
-  const [name, setName] = useState("");
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [thanks, setThanks] = useState(false);
+
 
   useEffect(() => {
     import("@google/model-viewer");
@@ -49,7 +49,6 @@ const ProductDetails = () => {
   useEffect(() => {
     setQty(1);
     setView("photo");
-    setThanks(false);
     window.scrollTo(0, 0);
     loadReviews();
   }, [loadReviews]);
@@ -60,6 +59,8 @@ const ProductDetails = () => {
     const counts = [5, 4, 3, 2, 1].map((n) => reviews.filter((r) => r.rating === n).length);
     return { count, average, counts };
   }, [reviews]);
+
+  const myReview = user ? reviews.find((r) => r.user_id === user.id) : null;
 
   if (loading) {
     return <p className="min-h-screen bg-neutral-900 text-white pt-52 text-center">Loading...</p>;
@@ -81,35 +82,54 @@ const ProductDetails = () => {
   )}`;
 
   const handleAdd = () => {
-    addToCart(product, qty);
-    openCart();
-  };
+  if (addToCart(product, qty)) openCart();
+};
 
   const submitReview = async (e) => {
     e.preventDefault();
-    if (!name.trim() || rating < 1 || comment.trim().length < 3) {
-      setError("Please add your name, a star rating and a short comment.");
+    if (!user) {
+      openAuth("signin");
+      return;
+    }
+    if (rating < 1 || comment.trim().length < 3) {
+      setError("Please add a star rating and a short comment.");
       return;
     }
     setBusy(true);
     setError("");
     const { error: dbError } = await supabase.from("product_reviews").insert({
       product_id: product.id,
-      name: name.trim(),
+      name: displayName.slice(0, 60),
       rating,
       comment: comment.trim(),
     });
     setBusy(false);
     if (dbError) {
-      setError("Could not post your review. Please try again.");
+      setError(
+        dbError.code === "23505"
+          ? "You've already reviewed this product."
+          : "Could not post your review. Please try again."
+      );
       return;
     }
-    setName("");
     setRating(0);
     setComment("");
-    setThanks(true);
     await loadReviews();
     refresh(); // updates the stars on the product cards
+  };
+
+  const deleteMyReview = async () => {
+    if (!myReview || !window.confirm("Delete your review?")) return;
+    const { error: dbError } = await supabase
+      .from("product_reviews")
+      .delete()
+      .eq("id", myReview.id);
+    if (dbError) {
+      alert("Could not delete your review.");
+      return;
+    }
+    await loadReviews();
+    refresh();
   };
 
   return (
@@ -260,49 +280,75 @@ const ProductDetails = () => {
                 </ul>
               )}
 
-              <form onSubmit={submitReview} className="mt-8 grid gap-3 rounded-2xl bg-neutral-50 p-5">
-                <h3 className="font-semibold text-lg">Write a review</h3>
-
-                <div className="flex gap-1" role="radiogroup" aria-label="Rating">
-                  {[1, 2, 3, 4, 5].map((n) => (
+              {!user ? (
+                <div className="mt-8 rounded-2xl bg-neutral-50 p-5 text-center">
+                  <h3 className="font-semibold text-lg">Want to review this product?</h3>
+                  <p className="mt-1 text-sm text-neutral-600">
+                    Sign in to share your experience.
+                  </p>
+                  <div className="mt-4 flex justify-center gap-3">
                     <button
-                      type="button"
-                      key={n}
-                      onClick={() => setRating(n)}
-                      aria-label={`${n} star${n > 1 ? "s" : ""}`}
-                      className={`text-4xl leading-none ${n <= rating ? "text-amber-500" : "text-neutral-300"}`}
+                      onClick={() => openAuth("signin")}
+                      className="rounded-full bg-neutral-900 text-white px-6 py-2.5 font-semibold hover:bg-neutral-700 transition"
                     >
-                      ★
+                      Sign in
                     </button>
-                  ))}
+                    <button
+                      onClick={() => openAuth("signup")}
+                      className="rounded-full border border-neutral-300 px-6 py-2.5 font-semibold hover:bg-neutral-100 transition"
+                    >
+                      Create account
+                    </button>
+                  </div>
                 </div>
+              ) : myReview ? (
+                <div className="mt-8 rounded-2xl bg-neutral-50 p-5">
+                  <p className="font-semibold">You've reviewed this product. Thank you!</p>
+                  <button
+                    onClick={deleteMyReview}
+                    className="mt-2 text-sm text-red-600 underline underline-offset-4"
+                  >
+                    Delete my review
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={submitReview} className="mt-8 grid gap-3 rounded-2xl bg-neutral-50 p-5">
+                  <h3 className="font-semibold text-lg">Write a review</h3>
+                  <p className="text-sm text-neutral-500">Posting as {displayName}</p>
 
-                <input
-                  className={inputClass}
-                  placeholder="Your name"
-                  value={name}
-                  maxLength={60}
-                  onChange={(e) => setName(e.target.value)}
-                />
-                <textarea
-                  className={inputClass}
-                  rows={4}
-                  placeholder="What did you think of this product?"
-                  value={comment}
-                  maxLength={1000}
-                  onChange={(e) => setComment(e.target.value)}
-                />
+                  <div className="flex gap-1" role="radiogroup" aria-label="Rating">
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <button
+                        type="button"
+                        key={n}
+                        onClick={() => setRating(n)}
+                        aria-label={`${n} star${n > 1 ? "s" : ""}`}
+                        className={`text-4xl leading-none ${n <= rating ? "text-amber-500" : "text-neutral-300"}`}
+                      >
+                        ★
+                      </button>
+                    ))}
+                  </div>
 
-                {error && <p className="text-sm text-red-600">{error}</p>}
-                {thanks && <p className="text-sm text-green-700">Thank you! Your review has been posted.</p>}
+                  <textarea
+                    className={inputClass}
+                    rows={4}
+                    placeholder="What did you think of this product?"
+                    value={comment}
+                    maxLength={1000}
+                    onChange={(e) => setComment(e.target.value)}
+                  />
 
-                <button
-                  disabled={busy}
-                  className="rounded-full bg-neutral-900 text-white py-3 font-semibold hover:bg-neutral-700 disabled:opacity-50 transition"
-                >
-                  {busy ? "Posting..." : "Post review"}
-                </button>
-              </form>
+                  {error && <p className="text-sm text-red-600">{error}</p>}
+
+                  <button
+                    disabled={busy}
+                    className="rounded-full bg-neutral-900 text-white py-3 font-semibold hover:bg-neutral-700 disabled:opacity-50 transition"
+                  >
+                    {busy ? "Posting..." : "Post review"}
+                  </button>
+                </form>
+              )}
             </div>
           </div>
         </div>
