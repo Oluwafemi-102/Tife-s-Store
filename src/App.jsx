@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom"
+import { Route, Routes, useLocation } from "react-router-dom"
 import Header from "./components/Header"
 import Hero from "./components/Hero"
 import Products from "./components/Products";
@@ -8,22 +8,25 @@ import Cart from "./components/Cart";
 import CartDrawer from "./components/CartDrawer";
 import AdminPanel from "./components/admin/AdminPanel";
 import ProductDetails from "./components/ProductDetails";
-import AuthModal from "./components/AuthModal";
+import AuthPage from "./components/AuthPage";
 
 const App = () => {
+  const { pathname } = useLocation();
+  const standalone = pathname === "/auth";
+
   return (
     <div className="ubuntu-medium">
-      <Header />
+      {!standalone && <Header />}
       <Routes>
         <Route path="/" element={<Hero />} />
         <Route path="/products/:id" element={<ProductDetails />} />
+        <Route path="/auth" element={<AuthPage />} />
       </Routes>
       <Products />
-      <CartDrawer />
+      {!standalone && <CartDrawer />}
       <AdminPanel />
-      <AuthModal />
       <Reviews />
-      <Footer />
+      {!standalone && <Footer />}
     </div>
   )
 }

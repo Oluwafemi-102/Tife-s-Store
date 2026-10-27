@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 
 const CartContext = createContext(null);
@@ -23,7 +24,8 @@ const saveCart = (userId, items) => {
 };
 
 export const CartProvider = ({ children }) => {
-  const { user, openAuth, authOpen } = useAuth();
+  const { user, openAuth } = useAuth();
+  const { pathname } = useLocation();
   const userId = user?.id ?? null;
 
   const [cart, setCart] = useState({ ownerId: null, items: [] });
@@ -41,10 +43,13 @@ export const CartProvider = ({ children }) => {
     if (cart.ownerId && cart.ownerId === userId) saveCart(userId, cart.items);
   }, [cart, userId]);
 
-  // Forget a waiting item if the sign-in window is closed without signing in
+  // Forget a waiting item if the customer leaves the sign-in page without signing in
+  const wasOnAuth = useRef(false);
   useEffect(() => {
-    if (!authOpen && !userId) setPending(null);
-  }, [authOpen, userId]);
+    const onAuthPage = pathname === "/auth";
+    if (wasOnAuth.current && !onAuthPage && !userId) setPending(null);
+    wasOnAuth.current = onAuthPage;
+  }, [pathname, userId]);
 
   const items = cart.ownerId === userId ? cart.items : [];
 

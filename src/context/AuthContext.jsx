@@ -1,20 +1,17 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [session, setSession] = useState(null);
-  const [authOpen, setAuthOpen] = useState(false);
-  const [authMode, setAuthMode] = useState("signin");
-  const [authMessage, setAuthMessage] = useState("");
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s);
-      if (s) setAuthOpen(false);
-    });
+    const { data } = supabase.auth.onAuthStateChange((_event, s) => setSession(s));
     return () => data.subscription.unsubscribe();
   }, []);
 
@@ -23,20 +20,18 @@ export const AuthProvider = ({ children }) => {
     ? user.user_metadata?.full_name || user.email?.split("@")[0] || "Customer"
     : "";
 
+  // Opens the standalone page, and remembers where to come back to
+  const openAuth = (mode = "signin", message = "") =>
+    navigate("/auth", {
+      state: { mode, message, from: location.pathname + location.search },
+    });
+
   return (
     <AuthContext.Provider
       value={{
         user,
         displayName,
-        authOpen,
-        authMode,
-        authMessage,
-        openAuth: (mode = "signin", message = "") => {
-  setAuthMode(mode);
-  setAuthMessage(message);
-  setAuthOpen(true);
-},
-        closeAuth: () => setAuthOpen(false),
+        openAuth,
         signOut: () => supabase.auth.signOut(),
       }}
     >
