@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "./AuthContext";
+import { useStoreData } from "./StoreDataContext";
 
 const CartContext = createContext(null);
 
@@ -27,6 +28,7 @@ export const CartProvider = ({ children }) => {
   const { user, openAuth } = useAuth();
   const { pathname } = useLocation();
   const userId = user?.id ?? null;
+  const { products } = useStoreData();
 
   const [cart, setCart] = useState({ ownerId: null, items: [] });
   const [isOpen, setIsOpen] = useState(false);
@@ -51,7 +53,16 @@ export const CartProvider = ({ children }) => {
     wasOnAuth.current = onAuthPage;
   }, [pathname, userId]);
 
-  const items = cart.ownerId === userId ? cart.items : [];
+  const stored = cart.ownerId === userId ? cart.items : [];
+const items = stored
+  .map((i) => {
+    const live = products.find((p) => p.id === i.id);
+    if (live) {
+      return { ...i, name: live.name, price: live.price, image: live.image, category: live.category };
+    }
+    return products.length > 0 ? null : i; // product was deleted, so drop it
+  })
+  .filter(Boolean);
 
   const updateItems = (fn) =>
     setCart((prev) => ({ ...prev, items: fn(prev.items) }));

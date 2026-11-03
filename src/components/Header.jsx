@@ -10,6 +10,7 @@ import { FcElectronics } from "react-icons/fc";
 import { useCart } from "../context/CartContext";
 import { useAdmin } from "../context/AdminContext";
 import { useAuth } from "../context/AuthContext";
+import { useOrders } from "../context/OrdersContext";
 
 // category must match the "category" field in your products exactly
 const categories = [
@@ -34,6 +35,7 @@ const Header = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [searchParams] = useSearchParams();
+  const { openOrders } = useOrders();
 
   const [query, setQuery] = useState("");
   const [menu, setMenu] = useState(null); // "account" | "help" | null
@@ -107,14 +109,23 @@ const Header = () => {
               onClick={() => toggle("account")}
             />
             {menu === "account" && (
-              <div role="menu" className="absolute right-0 top-full mt-2 w-56 rounded-2xl bg-white text-neutral-900 shadow-xl p-2 z-50">
+              <div
+                role="menu"
+                className="absolute right-0 top-full mt-2 w-56 rounded-2xl bg-white text-neutral-900 shadow-xl p-2 z-50"
+              >
                 {user ? (
                   <>
                     <p className="px-3 pt-2 text-sm font-semibold truncate">{displayName}</p>
                     <p className="px-3 pb-2 text-xs text-neutral-500 truncate">{user.email}</p>
-                    <span className={`${itemClass} text-neutral-400 cursor-not-allowed flex justify-between`}>
-                      My orders <span className="text-xs">Soon</span>
-                    </span>
+                    <button
+                      onClick={() => {
+                        setMenu(null);
+                        navigate("/orders");
+                      }}
+                      className={itemClass}
+                    >
+                      My orders
+                    </button>
                     <button
                       onClick={() => {
                         setMenu(null);
@@ -145,9 +156,15 @@ const Header = () => {
                     >
                       Create account
                     </button>
-                    <span className={`${itemClass} text-neutral-400 cursor-not-allowed flex justify-between`}>
-                      My orders <span className="text-xs">Soon</span>
-                    </span>
+                    <button
+                      onClick={() => {
+                        setMenu(null);
+                        navigate("/orders");
+                      }}
+                      className={itemClass}
+                    >
+                      My orders
+                    </button>
                   </>
                 )}
               </div>

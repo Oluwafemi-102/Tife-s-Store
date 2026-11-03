@@ -4,6 +4,7 @@ import { supabase } from "../../lib/supabase";
 import ProductsManager from "./ProductsManager";
 import SlidesManager from "./SlidesManager";
 import ReviewsManager from "./ReviewsManager";
+import OrdersManager from "./OrdersManager";
 
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
 
@@ -89,6 +90,15 @@ const AdminPanel = () => {
         </div>
 
         <div className="overflow-y-auto p-5">
+          <button
+            onClick={() => setView("orders")}
+            className="rounded-2xl border border-neutral-300 p-4 text-left hover:bg-neutral-50"
+          >
+            <span className="font-semibold">Orders</span>
+            <span className="block text-sm text-neutral-500">
+              See new orders and update their status
+            </span>
+          </button>
           {!isAdmin ? (
             <form onSubmit={handleLogin} className="grid gap-3">
               <label className="text-sm text-neutral-600">Enter the admin password</label>
@@ -143,8 +153,10 @@ const AdminPanel = () => {
             <ProductsManager />
           ) : view === "slides" ? (
             <SlidesManager />
-          ) : (
+          ) : view === "reviews" ? (
             <ReviewsManager />
+          ) : (
+            <OrdersManager />
           )}
         </div>
       </div>

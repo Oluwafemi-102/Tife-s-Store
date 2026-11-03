@@ -8,6 +8,16 @@ export const AuthProvider = ({ children }) => {
   const [session, setSession] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const [ready, setReady] = useState(false);
+
+useEffect(() => {
+  supabase.auth.getSession().then(({ data }) => {
+    setSession(data.session);
+    setReady(true);
+  });
+  const { data } = supabase.auth.onAuthStateChange((_event, s) => setSession(s));
+  return () => data.subscription.unsubscribe();
+}, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -30,6 +40,7 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider
       value={{
         user,
+        ready,
         displayName,
         openAuth,
         signOut: () => supabase.auth.signOut(),

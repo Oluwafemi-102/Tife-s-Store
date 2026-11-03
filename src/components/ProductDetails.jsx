@@ -35,6 +35,13 @@ const ProductDetails = () => {
   useEffect(() => {
     import("@google/model-viewer");
   }, []);
+  useEffect(() => {
+  const previous = document.body.style.overflow;
+  document.body.style.overflow = "hidden";
+  return () => {
+    document.body.style.overflow = previous;
+  };
+}, []);
 
   const loadReviews = useCallback(async () => {
     const { data, error: dbError } = await supabase
@@ -133,7 +140,7 @@ const ProductDetails = () => {
   };
 
   return (
-    <section className="min-h-screen bg-neutral-900 text-white">
+    <section className="fixed -t-7 inset-0 z-[250] overflow-y-auto lg:flex min-h-screen bg-neutral-900 text-white">
       <div className="mx-auto max-w-6xl px-6 pt-44 pb-12">
         <Link to="/products" className="text-sm opacity-80 hover:opacity-100">
           ← Back to products
