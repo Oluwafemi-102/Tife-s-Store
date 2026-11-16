@@ -3,6 +3,7 @@ import Stars from "./Stars";
 import { formatPrice } from "../utils/formatPrice";
 import AddToCartButton from "./AddToCartButton";
 import { useStoreData } from "../context/StoreDataContext";
+import Price, { SaleBadge } from "./Price";
 
 const ProductCard = ({ product }) => {
   const { ratings } = useStoreData();
@@ -12,7 +13,7 @@ const ProductCard = ({ product }) => {
     <article className="group bg-white text-neutral-900 rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition flex flex-col">
       <Link
         to={`/products/${product.id}`}
-        className="block aspect-square bg-neutral-100 overflow-hidden"
+        className="relative block aspect-square bg-neutral-100 overflow-hidden"
       >
         <img
           src={product.image}
@@ -20,6 +21,7 @@ const ProductCard = ({ product }) => {
           loading="lazy"
           className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
         />
+        <SaleBadge product={product} className="absolute left-3 top-3" />
       </Link>
 
       <div className="p-4 flex flex-col flex-1">
@@ -38,12 +40,10 @@ const ProductCard = ({ product }) => {
           <p className="mt-1 text-xs text-neutral-400">No reviews yet</p>
         )}
 
-        <p className="text-sm text-neutral-600 mt-1 line-clamp-2">
-          {product.description}
-        </p>
+        <p className="text-sm text-neutral-600 mt-1 line-clamp-2">{product.description}</p>
 
-        <div className="mt-auto pt-4 flex items-center justify-between">
-          <span className="font-bold text-lg">{formatPrice(product.price)}</span>
+        <div className="mt-auto pt-4 flex items-center justify-between gap-2">
+          <Price product={product} />
           <AddToCartButton product={product} />
         </div>
       </div>

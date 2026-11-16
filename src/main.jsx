@@ -8,21 +8,24 @@ import { StoreDataProvider } from "./context/StoreDataContext";
 import { AdminProvider } from "./context/AdminContext";
 import { AuthProvider } from "./context/AuthContext";
 import { OrdersProvider } from "./context/OrdersContext";
+import { FeedbackProvider } from "./context/FeedbackContext";
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
-      <AuthProvider>
-        <StoreDataProvider>
-          <AdminProvider>
-            <OrdersProvider>
-              <CartProvider>
-                <App />
-              </CartProvider>
-            </OrdersProvider>
-          </AdminProvider>
-        </StoreDataProvider>
-      </AuthProvider>
+      <FeedbackProvider>
+        <AuthProvider>
+          <StoreDataProvider>
+            <AdminProvider>
+              <OrdersProvider>
+                <CartProvider>
+                  <App />
+                </CartProvider>
+              </OrdersProvider>
+            </AdminProvider>
+          </StoreDataProvider>
+        </AuthProvider>
+      </FeedbackProvider>
     </BrowserRouter>
   </StrictMode>
 )

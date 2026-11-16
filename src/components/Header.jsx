@@ -11,6 +11,7 @@ import { useCart } from "../context/CartContext";
 import { useAdmin } from "../context/AdminContext";
 import { useAuth } from "../context/AuthContext";
 import { useOrders } from "../context/OrdersContext";
+import NotificationBell from "./NotificationBell";
 
 // category must match the "category" field in your products exactly
 const categories = [
@@ -81,8 +82,8 @@ const Header = () => {
   const toggle = (name) => setMenu((m) => (m === name ? null : name));
 
   return (
-    <div className="text-white w-full p-2 flex flex-col items-center justify-center absolute z-50">
-      <div className="flex items-center justify-center gap-40">
+    <div className="bg-black text-white w-full p-2 flex flex-col items-center justify-center fixed z-50">
+      <div className="flex items-center justify-center gap-20">
         <h1 className="satisfy-regular text-3xl hover:cursor-pointer">
           <Link to="/">Slay With Tife</Link>
         </h1>
@@ -196,6 +197,9 @@ const Header = () => {
               </div>
             )}
           </div>
+
+          {/* Notifications (signed-in customers only) */}
+          {user && <NotificationBell buttonClass={topStyles} />}
 
           {/* Cart */}
           <div className="relative">

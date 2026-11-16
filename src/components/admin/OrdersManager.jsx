@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { formatPrice } from "../../utils/formatPrice";
 import { STATUS } from "../../utils/orderStatus";
+import { useFeedback } from "../../context/FeedbackContext";
 
 const FILTERS = ["all", ...Object.keys(STATUS)];
 
@@ -9,6 +10,7 @@ const OrdersManager = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
+  const { toast, confirm } = useFeedback();
 
   const load = useCallback(async () => {
     const { data } = await supabase
@@ -25,18 +27,16 @@ const OrdersManager = () => {
   }, [load]);
 
   const setStatus = async (order, status) => {
-    const { error } = await supabase
-      .from("orders")
-      .update({ status })
-      .eq("id", order.id);
-    if (error) {
-      alert(error.message);
-    } else {
-      setOrders((prev) =>
-        prev.map((o) => (o.id === order.id ? { ...o, status } : o))
-      );
-    }
-  };
+  const { error } = await supabase.from("orders").update({ status }).eq("id", order.id);
+  if (error) {
+    toast.error(error.message);
+  } else {
+    setOrders((prev) => prev.map((o) => (o.id === order.id ? { ...o, status } : o)));
+    toast.success(
+      `Order marked as ${STATUS[status].label}.${status !== "pending" ? " The customer was notified." : ""}`
+    );
+  }
+};
 
   const countFor = (key) =>
     key === "all" ? orders.length : orders.filter((o) => o.status === key).length;

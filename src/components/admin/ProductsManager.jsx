@@ -3,6 +3,7 @@ import { supabase } from "../../lib/supabase";
 import { uploadFile } from "../../lib/uploadFile";
 import { useStoreData } from "../../context/StoreDataContext";
 import { formatPrice } from "../../utils/formatPrice";
+import { useFeedback } from "../../context/FeedbackContext";
 
 const CATEGORIES = ["Appliances", "Fashion", "Games", "Gadgets", "Electronics"];
 const empty = {
@@ -16,12 +17,13 @@ const empty = {
 const input = "border border-neutral-300 rounded-lg px-3 py-3 w-full";
 
 const ProductsManager = () => {
-  const { products, refresh } = useStoreData();
+ const { rawProducts: products, refresh } = useStoreData();
   const [form, setForm] = useState(null); // null = show the list
   const [imageFile, setImageFile] = useState(null);
   const [modelFile, setModelFile] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const { toast, confirm } = useFeedback();
 
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
 
@@ -61,6 +63,7 @@ const ProductsManager = () => {
       const { error: dbError } = await query;
       if (dbError) throw dbError;
       await refresh();
+      toast.success(form.id ? "Changes saved ✅" : "Product added 🎉");
       closeForm();
     } catch (err) {
       setError(err.message || "Something went wrong. Try again.");
@@ -69,14 +72,21 @@ const ProductsManager = () => {
   };
 
   const remove = async (product) => {
-    if (!window.confirm(`Delete "${product.name}"?`)) return;
-    const { error: dbError } = await supabase
-      .from("products")
-      .delete()
-      .eq("id", product.id);
-    if (dbError) alert(dbError.message);
-    else refresh();
-  };
+  const ok = await confirm({
+    title: "Delete product?",
+    message: `"${product.name}" will be removed from the store. This cannot be undone.`,
+    confirmText: "Delete",
+    danger: true,
+  });
+  if (!ok) return;
+  const { error: dbError } = await supabase.from("products").delete().eq("id", product.id);
+  if (dbError) {
+    toast.error(dbError.message);
+  } else {
+    toast.success("Product deleted");
+    refresh();
+  }
+};
 
   if (form) {
     return (

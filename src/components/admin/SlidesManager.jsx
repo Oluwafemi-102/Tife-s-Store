@@ -2,6 +2,7 @@ import { useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { uploadFile } from "../../lib/uploadFile";
 import { useStoreData } from "../../context/StoreDataContext";
+import { useFeedback } from "../../context/FeedbackContext";
 
 const empty = {
   title: "",
@@ -21,6 +22,7 @@ const SlidesManager = () => {
   const [modelFile, setModelFile] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const { toast, confirm } = useFeedback();
 
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
 
@@ -60,6 +62,7 @@ const SlidesManager = () => {
       const { error: dbError } = await query;
       if (dbError) throw dbError;
       await refresh();
+      toast.success(form.id ? "Slide saved ✅" : "Slide added 🎉");
       closeForm();
     } catch (err) {
       setError(err.message || "Something went wrong. Try again.");
@@ -68,11 +71,21 @@ const SlidesManager = () => {
   };
 
   const remove = async (slide) => {
-    if (!window.confirm(`Delete slide "${slide.title}"?`)) return;
-    const { error: dbError } = await supabase.from("slides").delete().eq("id", slide.id);
-    if (dbError) alert(dbError.message);
-    else refresh();
-  };
+  const ok = await confirm({
+    title: "Delete slide?",
+    message: `"${slide.title}" will be removed from the home page.`,
+    confirmText: "Delete",
+    danger: true,
+  });
+  if (!ok) return;
+  const { error: dbError } = await supabase.from("slides").delete().eq("id", slide.id);
+  if (dbError) {
+    toast.error(dbError.message);
+  } else {
+    toast.success("Slide deleted");
+    refresh();
+  }
+};
 
   if (form) {
     return (

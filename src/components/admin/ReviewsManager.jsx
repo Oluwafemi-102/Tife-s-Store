@@ -2,11 +2,13 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useStoreData } from "../../context/StoreDataContext";
 import Stars from "../Stars";
+import { useFeedback } from "../../context/FeedbackContext";
 
 const ReviewsManager = () => {
   const { refresh } = useStoreData();
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { toast, confirm } = useFeedback();
 
   const load = useCallback(async () => {
     const { data } = await supabase
@@ -23,15 +25,22 @@ const ReviewsManager = () => {
   }, [load]);
 
   const remove = async (review) => {
-    if (!window.confirm("Delete this review?")) return;
-    const { error } = await supabase.from("product_reviews").delete().eq("id", review.id);
-    if (error) {
-      alert(error.message);
-    } else {
-      await load();
-      refresh();
-    }
-  };
+  const ok = await confirm({
+    title: "Delete this review?",
+    message: "It will be removed from the product page.",
+    confirmText: "Delete",
+    danger: true,
+  });
+  if (!ok) return;
+  const { error } = await supabase.from("product_reviews").delete().eq("id", review.id);
+  if (error) {
+    toast.error(error.message);
+  } else {
+    await load();
+    refresh();
+    toast.success("Review deleted");
+  }
+};
 
   if (loading) return <p className="text-sm text-neutral-500">Loading...</p>;
   if (reviews.length === 0) {

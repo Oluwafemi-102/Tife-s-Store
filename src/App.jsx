@@ -11,6 +11,7 @@ import ProductDetails from "./components/ProductDetails";
 import AuthPage from "./components/AuthPage";
 import OrdersPage from "./components/OrdersPage";
 import OrdersModal from "./components/OrdersModal";
+import PromoBanner from "./components/PromoBanner";
 
 const App = () => {
   const { pathname } = useLocation();
@@ -24,6 +25,9 @@ const App = () => {
       {!standalone && <Header />}
       <Routes location={isOrders ? background || "/" : location}>
         <Route path="/" element={<Hero />} />
+      </Routes>
+      <PromoBanner />
+      <Routes location={isOrders ? background || "/" : location}>
         <Route path="/products/:id" element={<ProductDetails />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/orders" element={<OrdersPage />} />

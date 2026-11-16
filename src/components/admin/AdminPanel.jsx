@@ -5,6 +5,8 @@ import ProductsManager from "./ProductsManager";
 import SlidesManager from "./SlidesManager";
 import ReviewsManager from "./ReviewsManager";
 import OrdersManager from "./OrdersManager";
+import PromotionsManager from "./PromotionsManager";
+import NotificationsManager from "./NotificationsManager";
 
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
 
@@ -50,6 +52,8 @@ const AdminPanel = () => {
     products: "Products",
     slides: "Hero slides",
     reviews: "Product reviews",
+    promotions: "Sales & promotions",
+    notifications: "Send notification",
   };
 
   return (
@@ -140,6 +144,24 @@ const AdminPanel = () => {
                 </span>
               </button>
               <button
+                onClick={() => setView("promotions")}
+                className="rounded-2xl border border-neutral-300 p-4 text-left hover:bg-neutral-50"
+              >
+                <span className="font-semibold">Sales & promotions</span>
+                <span className="block text-sm text-neutral-500">
+                  Run a sale with a banner, discounts and sale tags
+                </span>
+              </button>
+              <button
+                onClick={() => setView("notifications")}
+                className="rounded-2xl border border-neutral-300 p-4 text-left hover:bg-neutral-50"
+              >
+                <span className="font-semibold">Send notification</span>
+                <span className="block text-sm text-neutral-500">
+                  Message customers with ready-made or custom notifications
+                </span>
+              </button>
+              <button
                 onClick={() => {
                   signOut();
                   closeAdmin();
@@ -155,8 +177,12 @@ const AdminPanel = () => {
             <SlidesManager />
           ) : view === "reviews" ? (
             <ReviewsManager />
-          ) : (
+          ) : view === "orders" ? (
             <OrdersManager />
+          ) : view === "promotions" ? (
+            <PromotionsManager />
+          ) : (
+            <NotificationsManager />
           )}
         </div>
       </div>

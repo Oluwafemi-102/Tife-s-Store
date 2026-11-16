@@ -7,6 +7,8 @@ import { formatPrice } from "../utils/formatPrice";
 import { WHATSAPP_NUMBER } from "../config";
 import Stars from "./Stars";
 import { useAuth } from "../context/AuthContext";
+import Price, { SaleBadge } from "./Price";
+import { useFeedback } from "../context/FeedbackContext";
 
 const tab = (on) =>
   `rounded-full px-4 py-1.5 text-sm font-semibold border transition ${on ? "bg-neutral-900 text-white border-neutral-900" : "border-neutral-300 hover:bg-neutral-100"
@@ -19,6 +21,7 @@ const ProductDetails = () => {
   const { products, loading, refresh } = useStoreData();
   const { addToCart, openCart } = useCart();
   const { user, displayName, openAuth } = useAuth();
+  const { toast, confirm } = useFeedback();
 
   const product = products.find((p) => String(p.id) === id);
 
@@ -121,23 +124,32 @@ const ProductDetails = () => {
     }
     setRating(0);
     setComment("");
+    toast.success("Thank you! Your review has been posted ⭐");
     await loadReviews();
     refresh(); // updates the stars on the product cards
   };
 
   const deleteMyReview = async () => {
-    if (!myReview || !window.confirm("Delete your review?")) return;
-    const { error: dbError } = await supabase
-      .from("product_reviews")
-      .delete()
-      .eq("id", myReview.id);
-    if (dbError) {
-      alert("Could not delete your review.");
-      return;
-    }
-    await loadReviews();
-    refresh();
-  };
+  if (!myReview) return;
+  const ok = await confirm({
+    title: "Delete your review?",
+    message: "Your review will be removed from this product.",
+    confirmText: "Delete",
+    danger: true,
+  });
+  if (!ok) return;
+  const { error: dbError } = await supabase
+    .from("product_reviews")
+    .delete()
+    .eq("id", myReview.id);
+  if (dbError) {
+    toast.error("Could not delete your review. Please try again.");
+    return;
+  }
+  toast.success("Your review was deleted");
+  await loadReviews();
+  refresh();
+};
 
   return (
     <section className="fixed -t-7 inset-0 z-[250] overflow-y-auto lg:flex min-h-screen bg-neutral-900 text-white">
@@ -150,7 +162,8 @@ const ProductDetails = () => {
         <div className="mt-4 grid gap-8 md:grid-cols-2 bg-white text-neutral-900 rounded-3xl p-5 md:p-8">
           {/* Media */}
           <div>
-            <div className="aspect-square rounded-2xl bg-neutral-100 overflow-hidden">
+            <div className="relative aspect-square rounded-2xl bg-neutral-100 overflow-hidden">
+              <SaleBadge product={product} className="absolute left-3 top-3 z-10" />
               {view === "3d" && product.model ? (
                 <model-viewer
                   src={product.model}
@@ -191,7 +204,9 @@ const ProductDetails = () => {
                 : "No reviews yet"}
             </a>
 
-            <p className="mt-4 text-3xl font-bold">{formatPrice(product.price)}</p>
+            <div className="mt-4">
+              <Price product={product} size="text-3xl" />
+            </div>
 
             {product.description && (
               <p className="mt-4 text-neutral-700 whitespace-pre-line">{product.description}</p>
