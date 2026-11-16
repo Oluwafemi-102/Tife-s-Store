@@ -21,7 +21,7 @@ const App = () => {
   const background = location.state?.background;
 
   return (
-    <div className="ubuntu-medium">
+    <div className="ubuntu-medium pb-20 xl:pb-0 overflow-x-clip">
       {!standalone && <Header />}
       <Routes location={isOrders ? background || "/" : location}>
         <Route path="/" element={<Hero />} />

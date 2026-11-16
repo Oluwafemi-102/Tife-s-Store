@@ -9,21 +9,25 @@ import { AdminProvider } from "./context/AdminContext";
 import { AuthProvider } from "./context/AuthContext";
 import { OrdersProvider } from "./context/OrdersContext";
 import { FeedbackProvider } from "./context/FeedbackContext";
+import { NotificationsProvider } from "./context/NotificationsContext";
+
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <FeedbackProvider>
         <AuthProvider>
-          <StoreDataProvider>
-            <AdminProvider>
-              <OrdersProvider>
-                <CartProvider>
-                  <App />
-                </CartProvider>
-              </OrdersProvider>
-            </AdminProvider>
-          </StoreDataProvider>
+          <NotificationsProvider>
+            <StoreDataProvider>
+              <AdminProvider>
+                <OrdersProvider>
+                  <CartProvider>
+                    <App />
+                  </CartProvider>
+                </OrdersProvider>
+              </AdminProvider>
+            </StoreDataProvider>
+          </NotificationsProvider>
         </AuthProvider>
       </FeedbackProvider>
     </BrowserRouter>

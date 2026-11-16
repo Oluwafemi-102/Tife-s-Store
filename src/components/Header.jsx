@@ -1,27 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import Option from "./Option";
-import { FaRegUser, FaShoppingBag, FaHeadphones } from "react-icons/fa";
+import { FaRegUser } from "react-icons/fa";
 import { IoIosHelpCircleOutline } from "react-icons/io";
 import { MdOutlineShoppingCart } from "react-icons/md";
-import { GiCookingPot, GiClothes } from "react-icons/gi";
-import { FaGamepad } from "react-icons/fa6";
-import { FcElectronics } from "react-icons/fc";
 import { useCart } from "../context/CartContext";
 import { useAdmin } from "../context/AdminContext";
 import { useAuth } from "../context/AuthContext";
 import { useOrders } from "../context/OrdersContext";
+import { useMediaQuery } from "../utils/useMediaQuery";
+import { NAV_CATEGORIES, categoryPath } from "../utils/navCategories";
+import { SUPPORT_EMAIL, WHATSAPP_NUMBER } from "../config";
 import NotificationBell from "./NotificationBell";
-
-// category must match the "category" field in your products exactly
-const categories = [
-  { label: "Official Store", icon: <FaShoppingBag className="text-2xl" />, category: null },
-  { label: "Appliances", icon: <GiCookingPot className="text-2xl" />, category: "Appliances" },
-  { label: "Fashion", icon: <GiClothes className="text-2xl" />, category: "Fashion" },
-  { label: "Games", icon: <FaGamepad className="text-2xl" />, category: "Games" },
-  { label: "Gadgets", icon: <FaHeadphones className="text-2xl" />, category: "Gadgets" },
-  { label: "Electronics", icon: <FcElectronics className="text-2xl" />, category: "Electronics" },
-];
+import MobileNav, { MobileTopBar } from "./MobileNav";
 
 const topStyles =
   "flex gap-2 items-center justify-center main-header-options p-3 rounded-3xl hover:cursor-pointer";
@@ -33,15 +24,16 @@ const itemClass =
 const Header = () => {
   const { totalItems, openCart } = useCart();
   const { openAdmin } = useAdmin();
+  const { user, displayName, openAuth, signOut } = useAuth();
+  const { openOrders } = useOrders();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [searchParams] = useSearchParams();
-  const { openOrders } = useOrders();
+  const isDesktop = useMediaQuery("(min-width: 1280px)");
 
   const [query, setQuery] = useState("");
   const [menu, setMenu] = useState(null); // "account" | "help" | null
   const menuRef = useRef(null);
-  const { user, displayName, openAuth, signOut } = useAuth();
 
   const onProducts = pathname === "/products";
   const activeCategory = (searchParams.get("category") ?? "").toLowerCase();
@@ -81,9 +73,20 @@ const Header = () => {
 
   const toggle = (name) => setMenu((m) => (m === name ? null : name));
 
+  /* ---------- Phones and tablets ---------- */
+  if (!isDesktop) {
+    return (
+      <>
+        <MobileTopBar query={query} setQuery={setQuery} onSearch={handleSearch} />
+        <MobileNav />
+      </>
+    );
+  }
+
+  /* ---------- Desktop ---------- */
   return (
-    <div className="bg-black text-white w-full p-2 flex flex-col items-center justify-center fixed z-50">
-      <div className="flex items-center justify-center gap-20">
+    <div className="text-white w-full p-2 flex flex-col items-center justify-center absolute z-50">
+      <div className="flex items-center justify-center gap-6 2xl:gap-16">
         <h1 className="satisfy-regular text-3xl hover:cursor-pointer">
           <Link to="/">Slay With Tife</Link>
         </h1>
@@ -95,11 +98,11 @@ const Header = () => {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search..."
             aria-label="Search products"
-            className="main-header-options text-white placeholder:text-gray-400 border border-none focus:outline-none focus:ring-2 focus:ring-blue-500 w-lg rounded-2xl p-3"
+            className="main-header-options text-white placeholder:text-gray-400 border border-none focus:outline-none focus:ring-2 focus:ring-blue-500 w-80 2xl:w-[32rem] rounded-2xl p-3"
           />
         </form>
 
-        <div ref={menuRef} className="flex gap-15">
+        <div ref={menuRef} className="flex gap-3 2xl:gap-8">
           {/* Account */}
           <div className="relative">
             <Option
@@ -121,7 +124,7 @@ const Header = () => {
                     <button
                       onClick={() => {
                         setMenu(null);
-                        navigate("/orders");
+                        openOrders();
                       }}
                       className={itemClass}
                     >
@@ -160,7 +163,7 @@ const Header = () => {
                     <button
                       onClick={() => {
                         setMenu(null);
-                        navigate("/orders");
+                        openOrders();
                       }}
                       className={itemClass}
                     >
@@ -182,16 +185,19 @@ const Header = () => {
               onClick={() => toggle("help")}
             />
             {menu === "help" && (
-              <div role="menu" className="absolute right-0 top-full mt-2 w-56 rounded-2xl bg-white text-neutral-900 shadow-xl p-2 z-50">
+              <div
+                role="menu"
+                className="absolute right-0 top-full mt-2 w-56 rounded-2xl bg-white text-neutral-900 shadow-xl p-2 z-50"
+              >
                 <a
-                  href="https://wa.me/2349078241752"
+                  href={`https://wa.me/${WHATSAPP_NUMBER}`}
                   target="_blank"
                   rel="noreferrer"
                   className={itemClass}
                 >
                   Chat on WhatsApp
                 </a>
-                <a href="mailto:your@email.com" className={itemClass}>
+                <a href={`mailto:${SUPPORT_EMAIL}`} className={itemClass}>
                   Email us
                 </a>
               </div>
@@ -222,18 +228,14 @@ const Header = () => {
       </div>
 
       {/* Category row */}
-      <div className="flex items-center justify-center gap-30">
-        {categories.map(({ label, icon, category }) => (
+      <div className="flex items-center justify-center gap-6 2xl:gap-16">
+        {NAV_CATEGORIES.map(({ label, Icon, category }) => (
           <Option
             key={label}
-            icon={icon}
+            icon={<Icon className="text-2xl" />}
             label={label}
             styles={navStyles}
-            to={
-              category
-                ? `/products?category=${encodeURIComponent(category)}`
-                : "/products"
-            }
+            to={categoryPath(category)}
             active={
               onProducts &&
               (category
