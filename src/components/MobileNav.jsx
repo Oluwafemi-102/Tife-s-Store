@@ -12,9 +12,11 @@ import { useCart } from "../context/CartContext";
 import { useOrders } from "../context/OrdersContext";
 import { useNotifications } from "../context/NotificationsContext";
 import { NAV_CATEGORIES, categoryPath } from "../utils/navCategories";
-import { SUPPORT_EMAIL, WHATSAPP_NUMBER } from "../config";
+import { WHATSAPP_NUMBER } from "../config";
 import NotificationList from "./NotificationList";
 import MyReviews from "./MyReviews";
+import { useFeedback } from "../context/FeedbackContext";
+import { openSupportEmail } from "../utils/contactEmail";
 
 const NAV_HEIGHT = "calc(4rem + env(safe-area-inset-bottom))";
 const ACCOUNT_VIEWS = ["account", "inbox", "reviews", "help"];
@@ -102,6 +104,7 @@ const MobileNav = () => {
   const { openOrders } = useOrders();
   const { unread } = useNotifications();
   const [sheet, setSheet] = useState(null);
+  const { toast } = useFeedback();
 
   const close = () => setSheet(null);
   const go = (path) => {
@@ -303,14 +306,14 @@ const MobileNav = () => {
                   <span className="flex-1 font-medium">Chat with us on WhatsApp</span>
                   <span className="text-neutral-400">›</span>
                 </a>
-                <a
-                  href={`mailto:${SUPPORT_EMAIL}`}
-                  className="flex items-center gap-4 px-4 py-4"
+                <button
+                  onClick={() => openSupportEmail(toast)}
+                  className="flex w-full items-center gap-4 px-4 py-4 text-left"
                 >
                   <span className="text-xl">✉️</span>
                   <span className="flex-1 font-medium">Email us</span>
                   <span className="text-neutral-400">›</span>
-                </a>
+                </button>
               </div>
             )}
           </div>

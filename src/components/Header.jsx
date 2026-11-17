@@ -10,9 +10,11 @@ import { useAuth } from "../context/AuthContext";
 import { useOrders } from "../context/OrdersContext";
 import { useMediaQuery } from "../utils/useMediaQuery";
 import { NAV_CATEGORIES, categoryPath } from "../utils/navCategories";
-import { SUPPORT_EMAIL, WHATSAPP_NUMBER } from "../config";
+import { WHATSAPP_NUMBER } from "../config";
 import NotificationBell from "./NotificationBell";
 import MobileNav, { MobileTopBar } from "./MobileNav";
+import { useFeedback } from "../context/FeedbackContext";
+import { openSupportEmail } from "../utils/contactEmail";
 
 const topStyles =
   "flex gap-2 items-center justify-center main-header-options p-3 rounded-3xl hover:cursor-pointer";
@@ -34,6 +36,7 @@ const Header = () => {
   const [query, setQuery] = useState("");
   const [menu, setMenu] = useState(null); // "account" | "help" | null
   const menuRef = useRef(null);
+  const { toast } = useFeedback();
 
   const onProducts = pathname === "/products";
   const activeCategory = (searchParams.get("category") ?? "").toLowerCase();
@@ -197,9 +200,15 @@ const Header = () => {
                 >
                   Chat on WhatsApp
                 </a>
-                <a href={`mailto:${SUPPORT_EMAIL}`} className={itemClass}>
+                <button
+                  onClick={() => {
+                    setMenu(null);
+                    openSupportEmail(toast);
+                  }}
+                  className={itemClass}
+                >
                   Email us
-                </a>
+                </button>
               </div>
             )}
           </div>
